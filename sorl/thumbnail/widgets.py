@@ -3,7 +3,7 @@ from django.utils.safestring import mark_safe
 from django.forms.widgets import ClearableFileInput, CheckboxInput
 
 class ClearableImageInput(ClearableFileInput):
-    template_with_initial = u'<div class="image-currently">%(initial_text)s:</div><div class="image-preview">%(initial)s</div><div class="image-clear">%(clear_template)s</div>%(input_text)s: %(input)s'
+    template_with_initial = u'<div class="image-field"><div class="image-currently">%(initial_text)s:</div><div class="image-preview">%(initial)s</div><div class="image-clear">%(clear_template)s</div>%(input_text)s: %(input)s</div>'
 
     def render(self, name, value, attrs=None):
         from sorl.thumbnail import get_thumbnail
