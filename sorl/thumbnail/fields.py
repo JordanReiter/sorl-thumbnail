@@ -4,6 +4,7 @@ from django.db.models import Q
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from sorl.thumbnail import default
+from sorl.thumbnail.widgets import ClearableImageImput
 
 
 __all__ = ('ImageField', 'ImageFormField')
@@ -43,6 +44,7 @@ class ImageField(models.FileField):
 
 
 class ImageFormField(forms.FileField):
+    widget = ClearableImageInput
     default_error_messages = {
         'invalid_image': _(u"Upload a valid image. The file you uploaded was "
                            u"either not an image or a corrupted image."),

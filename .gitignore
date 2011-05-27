@@ -11,3 +11,6 @@ _build
 build
 dist
 *.egg-info
+/.settings
+/.project
+/.pydevproject
