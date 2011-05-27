@@ -1,25 +1,12 @@
-import datetime
-from itertools import chain
-import time
-from urlparse import urljoin
-from django.forms.util import flatatt
-
-import django.utils.copycompat as copy
-from django.utils.datastructures import MultiValueDict, MergeDict
 from django.utils.html import escape, conditional_escape
-from django.utils.translation import ugettext, ugettext_lazy
-from django.utils.encoding import StrAndUnicode, force_unicode
 from django.utils.safestring import mark_safe
-from django.utils import datetime_safe, formats
-
-from django.forms.widgets import ClearableFileInput, CheckboxInput, FILE_INPUT_CONTRADICTION
-
-from sorl.thumbnail.shortcuts import get_thumbnail
-from sorl.thumbnail.conf import settings
+from django.forms.widgets import ClearableFileInput, CheckboxInput
 
 class ClearableImageInput(ClearableFileInput):
 
     def render(self, name, value, attrs=None):
+        from sorl.thumbnail import get_thumbnail
+        from sorl.thumbnail.conf import settings
         height = attrs.pop('height', getattr(settings, 'THUMBNAIL_HEIGHT', None))
         width = attrs.pop('width', getattr(settings, 'THUMBNAIL_WIDTH', None))
         substitutions = {

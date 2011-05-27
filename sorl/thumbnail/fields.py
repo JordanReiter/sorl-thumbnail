@@ -4,7 +4,7 @@ from django.db.models import Q
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from sorl.thumbnail import default
-from sorl.thumbnail.widgets import ClearableImageImput
+from sorl.thumbnail.widgets import ClearableImageInput
 
 
 __all__ = ('ImageField', 'ImageFormField')
