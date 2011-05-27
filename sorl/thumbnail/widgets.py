@@ -39,7 +39,7 @@ class ClearableImageInput(ClearableFileInput):
                 if width:
                     dimensions += ' width="%d"' % width
             template = self.template_with_initial
-            substitutions['initial'] = (u'<img src="%s"%s>%s</a>'
+            substitutions['initial'] = (u'<img src="%s"%s />'
                                         % (escape(thumbnail_url),
                                            dimensions))
             if not self.is_required:
