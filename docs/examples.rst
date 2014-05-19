@@ -74,6 +74,13 @@ Setting format and using the is_portrait filter::
         </div>
     {% endif %}
 
+Using HTML filter::
+
+    {{ text|html_thumbnails }}
+
+Using markdown filter::
+
+    {{ text|markdown_thumbnails }}
 
 .. highlight:: python
 
@@ -86,15 +93,13 @@ value store and its thumbnail references and the thumbnail files when deleted::
     from sorl.thumbnail import ImageField
 
     class Item(models.Model):
-        image = ImageField()
+        image = ImageField(upload_to='whatever')
 
 
 .. note:: You do not need to use the ``sorl.thumbnail.ImageField`` to use
     ``sorl.thumbnail``. The standard ``django.db.models.ImageField`` is fine
-    except that it does not know how to delete itself from the Key Value Store
-    or its thumbnails if you delete it. Also using the
-    ``sorl.thumbnail.ImageField`` lets you plugin the nice admin addition
-    explained in the next section.
+    except that using the ``sorl.thumbnail.ImageField`` lets you plugin the
+    nice admin addition explained in the next section.
 
 
 Another example on how to use ``sorl.thumbnail.ImageField`` in your existing
@@ -113,7 +118,7 @@ project with only small code changes::
 
 Admin examples
 ==============
-Recommended usage using ``sorl.thumbnail.admin.AdminImageMixin``::
+Recommended usage using ``sorl.thumbnail.admin.AdminImageMixin`` (note that this requires use of ``sorl.thumbnail.ImageField`` in your models as explained above)::
 
     # myapp/admin.py
     from django.contrib import admin
@@ -161,7 +166,7 @@ Easy to plugin solution example with little code to change::
 
 Low level API examples
 ======================
-How to get make a thumbnail in you python code::
+How to get make a thumbnail in your python code::
 
     from sorl.thumbnail import get_thumbnail
 

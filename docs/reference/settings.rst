@@ -60,6 +60,14 @@ Features
 * More dependencies
 * Requires a little extra work to transfer data between environments
 
+``THUMBNAIL_KEY_DBCOLUMN``
+==========================
+
+- Default ``'key'``
+
+Since MSSQL reserved the ``key`` name for db columns you can change this to
+something else using this setting.
+
 
 ``THUMBNAIL_ENGINE``
 ====================
@@ -90,16 +98,44 @@ Pgmagick
 * It is a tad slow?
 * Can handle CMYK sources
 
-ImageMagick
------------
+ImageMagick / GraphicsMagick
+----------------------------
 ``'sorl.thumbnail.engines.convert_engine.Engine'``. This engine uses the
-ImageMagick ``convert`` command. Features:
+ImageMagick ``convert`` or  GraphicsMagic ``gm convert`` command. Features:
 
 * Easy to install
 * Produces high quality images
 * It is pretty fast
 * Can handle CMYK sources
 * It is a command line command, that is less than ideal,
+
+Wand
+----------------------------
+``'sorl.thumbnail.engines.wand_engine.Engine'``. This engine uses `Wand
+<http://wand-py.org>`_, a ctypes-based simple ImageMagick binding for Python. 
+Features:
+
+* Easy to install
+* Produces high quality images
+* Can handle CMYK sources
+* Works on Python 2.6, 2.7, 3.2, 3.3, and PyPy
+
+``THUMBNAIL_CONVERT``
+=====================
+
+- Default ``'convert'``
+
+Path to convert command, use ``'gm convert'`` for GraphicsMagick.
+Only applicable for the convert Engine.
+
+
+``THUMBNAIL_IDENTIFY``
+======================
+
+- Default ``'identify'``
+
+Path to identify command, use ``'gm identify'`` for GraphicsMagick.
+Only applicable for the convert Engine.
 
 
 ``THUMBNAIL_STORAGE``
@@ -145,11 +181,20 @@ The port for Redis server. Only applicable for the Redis Key Value Store
 ``THUMBNAIL_CACHE_TIMEOUT``
 ===========================
 
-- Default: ``sys.maxint``
+- Default: ``3600 * 24 * 365 * 10``
 
-Cache timeout for Cached DB Key Value Store. You should probably keep this at
-maximum or ``None`` if your caching backend can handle that as infinite.
+Cache timeout for Cached DB Key Value Store in seconds. You should probably keep this 
+at maximum or ``None`` if your caching backend can handle that as infinite.
 Only applicable for the Cached DB Key Value Store.
+
+
+``THUMBNAIL_CACHE``
+===================
+
+- Default: ``'default'``
+
+Cache configuration for Cached DB Key Value Store. Defaults to the ``'default'`` cache
+but some applications might have multiple cache clusters.
 
 
 ``THUMBNAIL_KEY_PREFIX``
@@ -175,6 +220,14 @@ The generated thumbnails filename prefix.
 
 Default image format, supported formats are: ``'JPEG'``, ``'PNG'``. This also implicitly
 sets the filename extension. This can be overridden by individual options.
+
+``THUMBNAIL_PRESERVE_FORMAT``
+=============================
+
+- Default: ``False``
+
+If ``True``, the format of the input file will be preserved. If ``False``,
+``THUMBNAIL_FORMAT`` will be used.
 
 
 ``THUMBNAIL_COLORSPACE``
@@ -204,6 +257,22 @@ Should we upscale by default? ``True`` means we upscale images by default.
 Default thumbnail quality. A value between 0 and 100 is allowed. This can be
 overridden by individual options.
 
+``THUMBNAIL_PROGRESSIVE``
+=========================
+
+- Default: ``True``
+
+Saves jpeg thumbnails as progressive jpegs. This can be overridden by individual
+options.
+
+
+``THUMBNAIL_ORIENTATION``
+========================
+
+- Default: ``True``
+
+Orientate the thumbnail with respect to source EXIF orientation tag
+
 
 ``THUMBNAIL_DUMMY``
 ===================
@@ -215,26 +284,52 @@ case is when you want to do development on a deployed project that has image
 references in its database. Instead of downloading all the image files from the
 server hosting the deployed project and all its thumbnails we just set this
 option to ``True``. This will generate placeholder images for all thumbnails
-regardless of the input source.
+missing input source.
 
 
 ``THUMBNAIL_DUMMY_SOURCE``
 ==========================
 
-- Default ``http://placekitten.com/%(width)s/%(height)s``
+- Default ``http://dummyimage.com/%(width)sx%(height)s``
 
-If ``THUMBNAIL_DUMMY`` is ``True`` then this is the source of the presented
-thumbnail. Width and Height is passed to the string for formatting.  Another
-option is for example ``http://placehold.it/%(width)sx%(height)s``.
+This is the generated thumbnail whensource of the presented thumbnail. Width and
+Height is passed to the string for formatting.  Other options are for example:
+
+- ``http://placehold.it/%(width)sx%(height)s``
+- ``http://placekitten.com/%(width)s/%(height)s`` 
 
 
 ``THUMBNAIL_DUMMY_RATIO``
 =========================
 
-Default: ``1.5``
+- Default: ``1.5``
 
-This option is only applicable if ``THUMBNAIL_DUMMY`` is set to true. This
-value sets an image ratio to all thumbnails that are not defined by width
+This value sets an image ratio to all thumbnails that are not defined by width
 **and** height since we cannot determine from the file input (since we don't
 have that).
 
+``THUMBNAIL_ALTERNATIVE_RESOLUTIONS``
+=====================================
+
+- Default: ``[]``
+- Example: ``[1.5, 2]``
+
+This value enables creation of additional high-resolution ("Retina") thumbnails
+for every thumbnail. Resolution multiplicators, e.g. value 2 means for every thumbnail
+of regular size x\*y, additional thumbnail of 2x\*2y size is created.
+
+``THUMBNAIL_FILTER_WIDTH``
+==========================
+
+- Default: ``500``
+
+This value sets the width of thumbnails inserted when running filters one texts
+that regex replaces references to images with thumbnails.
+
+``THUMBNAIL_URL_TIMEOUT``
+=========================
+
+- Default: ``None``
+
+This value sets the timeout value in seconds when retrieving a source image from a URL. 
+If no timeout value is specified, it will wait indefinitely for a response.

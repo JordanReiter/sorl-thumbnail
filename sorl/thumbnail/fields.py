@@ -1,4 +1,5 @@
-from __future__ import with_statement
+from __future__ import with_statement, unicode_literals
+
 from django.db import models
 from django.db.models import Q
 from django import forms
@@ -10,17 +11,19 @@ from sorl.thumbnail.widgets import ClearableImageInput
 __all__ = ('ImageField', 'ImageFormField')
 
 
-class ImageField(models.FileField):
+class ImageField(models.ImageField):
     def delete_file(self, instance, sender, **kwargs):
         """
-        Adds deletion of thumbnails and key kalue store references to the
+        Adds deletion of thumbnails and key value store references to the
         parent class implementation. Only called in Django < 1.2.5
         """
         file_ = getattr(instance, self.attname)
+
         # If no other object of this type references the file, and it's not the
         # default value for future objects, delete it from the backend.
         query = Q(**{self.name: file_.name}) & ~Q(pk=instance.pk)
         qs = sender._default_manager.filter(query)
+
         if (file_ and file_.name != self.default and not qs):
             default.backend.delete(file_)
         elif file_:
@@ -38,16 +41,16 @@ class ImageField(models.FileField):
 
     def south_field_triple(self):
         from south.modelsinspector import introspector
-        cls_name = '%s.%s' % (self.__class__.__module__ , self.__class__.__name__)
+
+        cls_name = '%s.%s' % (self.__class__.__module__, self.__class__.__name__)
         args, kwargs = introspector(self)
         return (cls_name, args, kwargs)
 
 
-class ImageFormField(forms.FileField):
-    widget = ClearableImageInput
+class ImageFormField(forms.ImageField):
     default_error_messages = {
-        'invalid_image': _(u"Upload a valid image. The file you uploaded was "
-                           u"either not an image or a corrupted image."),
+        'invalid_image': _("Upload a valid image. The file you uploaded was "
+                           "either not an image or a corrupted image."),
     }
 
     def to_python(self, data):
@@ -58,6 +61,7 @@ class ImageFormField(forms.FileField):
         f = super(ImageFormField, self).to_python(data)
         if f is None:
             return None
+
         # We need to get a file raw data to validate it.
         if hasattr(data, 'temporary_file_path'):
             with open(data.temporary_file_path(), 'rb') as fp:
@@ -66,9 +70,11 @@ class ImageFormField(forms.FileField):
             raw_data = data.read()
         else:
             raw_data = data['content']
+
         if not default.engine.is_valid_image(raw_data):
-            raise forms.ValidationError(self.error_messages['invalid_image'])
+            raise forms.ValidationError(self.default_error_messages['invalid_image'])
         if hasattr(f, 'seek') and callable(f.seek):
             f.seek(0)
+
         return f
 

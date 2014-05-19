@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from sorl.thumbnail.conf import settings
 from sorl.thumbnail.helpers import serialize, deserialize, ThumbnailError
 from sorl.thumbnail.images import serialize_image_file, deserialize_image_file
@@ -29,17 +30,19 @@ class KVStoreBase(object):
         Updates store for the `image_file`. Makes sure the `image_file` has a
         size set.
         """
-        image_file.set_size() # make sure its got a size
+        image_file.set_size()  # make sure its got a size
         self._set(image_file.key, image_file)
         if source is not None:
             if not self.get(source):
                 # make sure the source is in kvstore
                 raise ThumbnailError('Cannot add thumbnails for source: `%s` '
                                      'that is not in kvstore.' % source.name)
+
             # Update the list of thumbnails for source.
             thumbnails = self._get(source.key, identity='thumbnails') or []
             thumbnails = set(thumbnails)
             thumbnails.add(image_file.key)
+
             self._set(source.key, list(thumbnails), identity='thumbnails')
 
     def get_or_set(self, image_file):
@@ -67,11 +70,13 @@ class KVStoreBase(object):
         if thumbnail_keys:
             # Delete all thumbnail keys from store and delete the
             # thumbnail ImageFiles.
+
             for key in thumbnail_keys:
                 thumbnail = self._get(key)
                 if thumbnail:
-                    self.delete(thumbnail)
-                    thumbnail.delete() # delete the actual file
+                    self.delete(thumbnail, False)
+                    thumbnail.delete()  # delete the actual file
+
             # Delete the thumbnails key from store
             self._delete(image_file.key, identity='thumbnails')
 
@@ -84,24 +89,31 @@ class KVStoreBase(object):
         """
         for key in self._find_keys(identity='image'):
             image_file = self._get(key)
+
             if image_file and not image_file.exists():
                 self.delete(image_file)
+
         for key in self._find_keys(identity='thumbnails'):
             # We do not need to check for file existence in here since we
             # already did that above for all image references
             image_file = self._get(key)
+
             if image_file:
                 # if there is an image_file then we check all of its thumbnails
                 # for existence
                 thumbnail_keys = self._get(key, identity='thumbnails') or []
                 thumbnail_keys_set = set(thumbnail_keys)
+
                 for thumbnail_key in thumbnail_keys:
                     if not self._get(thumbnail_key):
                         thumbnail_keys_set.remove(thumbnail_key)
+
                 thumbnail_keys = list(thumbnail_keys_set)
+
                 if thumbnail_keys:
                     self._set(key, thumbnail_keys, identity='thumbnails')
-                    return
+                    continue
+
             # if there is no image_file then this thumbnails key is just
             # hangin' loose, If the thumbnail_keys ended up empty there is no
             # reason for keeping it either
@@ -114,17 +126,21 @@ class KVStoreBase(object):
         want to use the ``cleanup`` method instead.
         """
         all_keys = self._find_keys_raw(settings.THUMBNAIL_KEY_PREFIX)
-        self._delete_raw(*all_keys)
+        if all_keys:
+            self._delete_raw(*all_keys)
 
     def _get(self, key, identity='image'):
         """
         Deserializing, prefix wrapper for _get_raw
         """
         value = self._get_raw(add_prefix(key, identity))
-        if value is None:
+
+        if not value:
             return None
+
         if identity == 'image':
             return deserialize_image_file(value)
+
         return deserialize(value)
 
     def _set(self, key, value, identity='image'):
