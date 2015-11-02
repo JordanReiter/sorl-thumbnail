@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
+from django.core.exceptions import ImproperlyConfigured
 from sorl.thumbnail.helpers import ThumbnailError
 from sorl.thumbnail.parsers import parse_crop, parse_geometry
 
@@ -34,3 +35,13 @@ class GeometryParserTestCase(unittest.TestCase):
         self.assertEqual(g, (222, None))
         g = parse_geometry('x999')
         self.assertEqual(g, (None, 999))
+
+    def test_geometry_aliases(self):
+        g = parse_geometry('small')
+        self.assertEqual(g, (20, 30))
+        g = parse_geometry('medium')
+        self.assertEqual(g, (80, 70))
+        g = parse_geometry('large')
+        self.assertEqual(g, (100, 100))
+        self.assertRaises(ImproperlyConfigured, parse_geometry, 'huge')
+        self.assertRaises(ImproperlyConfigured, parse_geometry, 'badalias')

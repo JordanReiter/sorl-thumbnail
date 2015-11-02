@@ -2,6 +2,8 @@
 import re
 
 from django.utils import six
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 from sorl.thumbnail.helpers import ThumbnailError, toint
 
@@ -17,8 +19,31 @@ class ThumbnailParseError(ThumbnailError):
 def parse_geometry(geometry, ratio=None):
     """
     Parses a geometry string syntax and returns a (width, height) tuple
+
+    You can also use aliases with the setting THUMBNAIL_ALIASES, in the
+    format:
+
+    THUMBNAIL_ALIASES = {
+        'ALIAS_NAME': (width, height)
+    }
+
+    Where width and height are integers.
     """
     m = geometry_pat.match(geometry)
+
+    if not m and re.match(r'^[-\w]+', geometry):
+        try:
+            alias_size = settings.THUMBNAIL_ALIASES[geometry]
+            x, y = alias_size
+            return x, y
+        except AttributeError:
+            pass
+        except (ValueError, TypeError):
+            raise ImproperlyConfigured('You specified an alias %s with an '
+                                       'invalid value: %s' % ( geometry, alias_size))
+        except KeyError:
+            raise ImproperlyConfigured('Thumbnail alias not found: %s' % geometry)
+
 
     def syntax_error():
         return ThumbnailParseError('Geometry does not have the correct '
