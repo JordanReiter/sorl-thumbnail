@@ -19,6 +19,7 @@ EXTENSIONS = {
     'PNG': 'png',
 }
 
+ALWAYS_CHECK_EXISTENCE = getattr(settings, 'THUMBNAIL_ALWAYS_CHECK_EXISTENCE', False)
 
 class ThumbnailBackend(object):
     """
@@ -92,6 +93,9 @@ class ThumbnailBackend(object):
         name = self._get_thumbnail_filename(source, geometry_string, options)
         thumbnail = ImageFile(name, default.storage)
         cached = default.kvstore.get(thumbnail)
+
+        if ALWAYS_CHECK_EXISTENCE and not thumbnail.exists():
+			cached = None
 
         if cached:
             return cached
