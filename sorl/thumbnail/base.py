@@ -95,7 +95,7 @@ class ThumbnailBackend(object):
         cached = default.kvstore.get(thumbnail)
 
         if ALWAYS_CHECK_EXISTENCE and not thumbnail.exists():
-			cached = None
+            cached = None
 
         if cached:
             return cached
