@@ -27,6 +27,10 @@ THUMBNAIL_ENGINE = 'sorl.thumbnail.engines.pil_engine.Engine'
 THUMBNAIL_CONVERT = 'convert'
 THUMBNAIL_IDENTIFY = 'identify'
 
+# Path to ``vipsthumbnail`` and ``vipsheader``
+THUMBNAIL_VIPSTHUMBNAIL = 'vipsthumbnail'
+THUMBNAIL_VIPSHEADER = 'vipsheader'
+
 # Storage for the generated thumbnails
 THUMBNAIL_STORAGE = settings.DEFAULT_FILE_STORAGE
 
@@ -54,7 +58,7 @@ THUMBNAIL_KEY_PREFIX = 'sorl-thumbnail'
 # Thumbnail filename prefix
 THUMBNAIL_PREFIX = 'cache/'
 
-# Image format, common formats are: JPEG, PNG
+# Image format, common formats are: JPEG, PNG, GIF
 # Make sure the backend can handle the format you specify
 THUMBNAIL_FORMAT = 'JPEG'
 

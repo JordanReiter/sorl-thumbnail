@@ -2,6 +2,7 @@ from __future__ import unicode_literals, with_statement
 import re
 import os
 import subprocess
+from collections import OrderedDict
 
 from django.utils.encoding import smart_str
 from django.core.files.temp import NamedTemporaryFile
@@ -10,7 +11,6 @@ from sorl.thumbnail.base import EXTENSIONS
 from sorl.thumbnail.compat import b
 from sorl.thumbnail.conf import settings
 from sorl.thumbnail.engines.base import EngineBase
-from sorl.thumbnail.compat import OrderedDict
 
 
 size_re = re.compile(r'^(?:.+) (?:[A-Z]+) (?P<x>\d+)x(?P<y>\d+)')
@@ -133,6 +133,17 @@ class Engine(EngineBase):
             # destination
             image['options']['auto-orient'] = None
         return image
+
+    def _flip_dimensions(self, image):
+        if settings.THUMBNAIL_CONVERT.endswith('gm convert'):
+            args = settings.THUMBNAIL_IDENTIFY.split()
+            args.extend(['-format', '%[exif:orientation]', image['source']])
+            p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p.wait()
+            result = p.stdout.read().strip()
+            return result != 'unknown' and int(result) in [5, 6, 7, 8]
+        else:
+            return False
 
     def _colorspace(self, image, colorspace):
         """

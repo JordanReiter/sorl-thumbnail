@@ -30,12 +30,14 @@ class AdminImageWidget(forms.ClearableFileInput):
                 aux_ext = str(value).split('.')
                 if aux_ext[len(aux_ext) - 1].lower() == 'png':
                     ext = 'PNG'
+                elif aux_ext[len(aux_ext) - 1].lower() == 'gif':
+                    ext = 'GIF'
             except:
                 pass
             try:
                 mini = get_thumbnail(value, 'x80', upscale=False, format=ext)
             except Exception as e:
-                logger.warn("Unable to get the thumbnail", exc_info=e)
+                logger.warning("Unable to get the thumbnail", exc_info=e)
             else:
                 try:
                     output = (
@@ -44,7 +46,7 @@ class AdminImageWidget(forms.ClearableFileInput):
                         'target="_blank" href="%s">'
                         '<img src="%s"></a>%s</div>'
                     ) % (mini.width, value.url, mini.url, output)
-                except AttributeError:
+                except (AttributeError, TypeError):
                     pass
         return mark_safe(output)
 
