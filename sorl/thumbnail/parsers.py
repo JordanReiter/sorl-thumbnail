@@ -24,8 +24,12 @@ def parse_geometry(geometry, ratio=None):
     format:
 
     THUMBNAIL_ALIASES = {
-        'ALIAS_NAME': (width, height)
+        '': {
+            'ALIAS_NAME': (width, height)
+        }
     }
+
+    Note the '' above is for compatibility with easy_thumbnails.
 
     Where width and height are integers.
     """
@@ -33,7 +37,7 @@ def parse_geometry(geometry, ratio=None):
 
     if not m and re.match(r'^[-\w]+', geometry):
         try:
-            alias_size = settings.THUMBNAIL_ALIASES[geometry]
+            alias_size = settings.THUMBNAIL_ALIASES[''][geometry]
             x, y = alias_size
             return x, y
         except AttributeError:

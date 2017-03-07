@@ -48,9 +48,11 @@ MIDDLEWARE_CLASSES = (
 
 
 THUMBNAIL_ALIASES = {
-    'small': (20, 30),
-    'medium': (80, 70),
-    'large': (100, 100),
-    'xlarge': (200, 200),
-    'badalias': (34, )
+    '': {
+        'small': (20, 30),
+        'medium': (80, 70),
+        'large': (100, 100),
+        'xlarge': (200, 200),
+        'badalias': (34, )
+    }
 }
