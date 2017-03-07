@@ -1,20 +1,22 @@
-# -*- encoding: utf8 -*-
+# encoding=utf-8
+
 from __future__ import unicode_literals
+import decimal
 import logging
-
 import sys
-
 import re
 import os
 from functools import wraps
+
 from django.template import Library, Node, NodeList, TemplateSyntaxError
 from django.utils.encoding import smart_str
+from django.utils.six import text_type
 from django.conf import settings
+
 from sorl.thumbnail.conf import settings as sorl_settings
 from sorl.thumbnail import default
 from sorl.thumbnail.images import ImageFile, DummyImageFile
 from sorl.thumbnail.parsers import parse_geometry
-from sorl.thumbnail.compat import text_type
 from sorl.thumbnail.shortcuts import get_thumbnail
 
 
@@ -62,7 +64,7 @@ class ThumbnailNodeBase(Node):
 
             error_message = 'Thumbnail tag failed'
 
-            if settings.TEMPLATE_DEBUG:
+            if context.template.engine.debug:
                 try:
                     error_message_template = (
                         "Thumbnail tag failed "
@@ -85,7 +87,7 @@ class ThumbnailNodeBase(Node):
             return self.nodelist_empty.render(context)
 
     def _render(self, context):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class ThumbnailNode(ThumbnailNodeBase):
@@ -166,6 +168,20 @@ def resolution(file_, resolution_string):
     """
     A filter to return the URL for the provided resolution of the thumbnail.
     """
+    if sorl_settings.THUMBNAIL_DUMMY:
+        dummy_source = sorl_settings.THUMBNAIL_DUMMY_SOURCE
+        source = dummy_source.replace('%(width)s', '(?P<width>[0-9]+)')
+        source = source.replace('%(height)s', '(?P<height>[0-9]+)')
+        source = re.compile(source)
+        try:
+            resolution = decimal.Decimal(resolution_string.strip('x'))
+            info = source.match(file_).groupdict()
+            info = {dimension: int(int(size) * resolution) for (dimension, size) in info.items()}
+            return dummy_source % info
+        except (AttributeError, TypeError, KeyError):
+            # If we can't manipulate the dummy we shouldn't change it at all
+            return file_
+
     filename, extension = os.path.splitext(file_)
     return '%s@%s%s' % (filename, resolution_string, extension)
 
@@ -245,7 +261,6 @@ def text_filter(regex_base, value):
     """
     Helper method to regex replace images with captions in different markups
     """
-
     regex = regex_base % {
         're_cap': '[a-zA-Z0-9\.\,:;/_ \(\)\-\!\?\"]+',
         're_img': '[a-zA-Z0-9\.:/_\-\% ]+'
@@ -254,8 +269,11 @@ def text_filter(regex_base, value):
 
     for i in images:
         image = i[1]
+        if image.startswith(settings.MEDIA_URL):
+            image = image[len(settings.MEDIA_URL):]
+
         im = get_thumbnail(image, str(sorl_settings.THUMBNAIL_FILTER_WIDTH))
-        value = value.replace(image, im.url)
+        value = value.replace(i[1], im.url)
 
     return value
 

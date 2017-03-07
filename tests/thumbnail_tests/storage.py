@@ -1,4 +1,6 @@
+from __future__ import unicode_literals
 import logging
+
 from django.core.files.storage import FileSystemStorage
 
 
@@ -37,7 +39,7 @@ class TestStorageMixin(object):
         return super(TestStorageMixin, self).get_available_name(name, *args, **kwargs)
 
     def path(self, name, *args, **kwargs):
-        #slog.debug('path: %s' % name)
+        # slog.debug('path: %s' % name)
         return super(TestStorageMixin, self).path(name, *args, **kwargs)
 
     def delete(self, name, *args, **kwargs):
@@ -57,7 +59,7 @@ class TestStorageMixin(object):
         return super(TestStorageMixin, self).size(name, *args, **kwargs)
 
     def url(self, name, *args, **kwargs):
-        #slog.debug('url: %s' % name)
+        # slog.debug('url: %s' % name)
         return super(TestStorageMixin, self).url(name, *args, **kwargs)
 
     def accessed_time(self, name, *args, **kwargs):

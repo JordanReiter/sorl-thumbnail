@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.conf import settings
 
 # When True ThumbnailNode.render can raise errors
@@ -26,6 +27,10 @@ THUMBNAIL_ENGINE = 'sorl.thumbnail.engines.pil_engine.Engine'
 THUMBNAIL_CONVERT = 'convert'
 THUMBNAIL_IDENTIFY = 'identify'
 
+# Path to ``vipsthumbnail`` and ``vipsheader``
+THUMBNAIL_VIPSTHUMBNAIL = 'vipsthumbnail'
+THUMBNAIL_VIPSHEADER = 'vipsheader'
+
 # Storage for the generated thumbnails
 THUMBNAIL_STORAGE = settings.DEFAULT_FILE_STORAGE
 
@@ -35,6 +40,10 @@ THUMBNAIL_REDIS_PASSWORD = ''
 THUMBNAIL_REDIS_HOST = 'localhost'
 THUMBNAIL_REDIS_PORT = 6379
 THUMBNAIL_REDIS_UNIX_SOCKET_PATH = None
+
+# DBM settings
+THUMBNAIL_DBM_FILE = "thumbnail_kvstore"
+THUMBNAIL_DBM_MODE = 0o644
 
 # Cache timeout for ``cached_db`` store. You should probably keep this at
 # maximum or ``0`` if your caching backend can handle that as infinate.
@@ -49,7 +58,7 @@ THUMBNAIL_KEY_PREFIX = 'sorl-thumbnail'
 # Thumbnail filename prefix
 THUMBNAIL_PREFIX = 'cache/'
 
-# Image format, common formats are: JPEG, PNG
+# Image format, common formats are: JPEG, PNG, GIF
 # Make sure the backend can handle the format you specify
 THUMBNAIL_FORMAT = 'JPEG'
 
@@ -108,3 +117,7 @@ THUMBNAIL_FILTER_WIDTH = 500
 # Should we flatten images by default (fixes a lot of transparency issues with
 # imagemagick)
 THUMBNAIL_FLATTEN = False
+
+# Whenever we will check an existing thumbnail exists and avoid to overwrite or not.
+# Set this to true if you have an slow .exists() implementation on your storage backend of choice.
+THUMBNAIL_FORCE_OVERWRITE = False

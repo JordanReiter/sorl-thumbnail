@@ -1,4 +1,4 @@
-from django.core.cache import cache, get_cache, InvalidCacheBackendError
+from django.core.cache import cache, caches, InvalidCacheBackendError
 from sorl.thumbnail.kvstores.base import KVStoreBase
 from sorl.thumbnail.conf import settings
 from sorl.thumbnail.models import KVStore as KVStoreModel
@@ -11,12 +11,16 @@ class EMPTY_VALUE(object):
 class KVStore(KVStoreBase):
     def __init__(self):
         super(KVStore, self).__init__()
-        try:
-            self.cache = get_cache(settings.THUMBNAIL_CACHE)
-        except InvalidCacheBackendError:
-            self.cache = cache
 
-    def clear(self):
+    @property
+    def cache(self):
+        try:
+            kv_cache = caches[settings.THUMBNAIL_CACHE]
+        except InvalidCacheBackendError:
+            kv_cache = cache
+        return kv_cache
+
+    def clear(self, delete_thumbnails=False):
         """
         We can clear the database more efficiently using the prefix here rather
         than calling :meth:`_delete_raw`.
@@ -25,6 +29,8 @@ class KVStore(KVStoreBase):
         for key in self._find_keys_raw(prefix):
             self.cache.delete(key)
         KVStoreModel.objects.filter(key__startswith=prefix).delete()
+        if delete_thumbnails:
+            self.delete_all_thumbnail_files()
 
     def _get_raw(self, key):
         value = self.cache.get(key)
@@ -40,8 +46,11 @@ class KVStore(KVStoreBase):
         return value
 
     def _set_raw(self, key, value):
-        KVStoreModel.objects.get_or_create(
+        kvstore_value, created = KVStoreModel.objects.get_or_create(
             key=key, defaults={'value': value})
+        if not created:
+            kvstore_value.value = value
+            kvstore_value.save()
         self.cache.set(key, value, settings.THUMBNAIL_CACHE_TIMEOUT)
 
     def _delete_raw(self, *keys):
@@ -52,4 +61,3 @@ class KVStore(KVStoreBase):
     def _find_keys_raw(self, prefix):
         qs = KVStoreModel.objects.filter(key__startswith=prefix)
         return qs.values_list('key', flat=True)
-

@@ -1,6 +1,5 @@
-#coding=utf-8
+# coding=utf-8
 from __future__ import division
-import math
 
 from sorl.thumbnail.conf import settings
 from sorl.thumbnail.helpers import toint
@@ -44,7 +43,15 @@ class EngineBase(object):
         """
         if options.get('orientation', settings.THUMBNAIL_ORIENTATION):
             return self._orientation(image)
+        self.reoriented = True
         return image
+
+    def flip_dimensions(self, image, geometry=None, options=None):
+        options = options or {}
+        reoriented = hasattr(self, 'reoriented')
+        if options.get('orientation', settings.THUMBNAIL_ORIENTATION) and not reoriented:
+            return self._flip_dimensions(image)
+        return False
 
     def colorspace(self, image, geometry, options):
         """
@@ -52,13 +59,13 @@ class EngineBase(object):
         """
         colorspace = options['colorspace']
         return self._colorspace(image, colorspace)
-        
+
     def remove_border(self, image, options):
-    
+
         if options.get('remove_border', False):
             x_image, y_image = self.get_image_size(image)
             image = self._remove_border(image, x_image, y_image)
-    
+
         return image
 
     def _calculate_scaling_factor(self, x_image, y_image, geometry, options):
@@ -86,11 +93,9 @@ class EngineBase(object):
         Wrapper for ``_crop``
         """
         crop = options['crop']
-        upscale = options['upscale']
         x_image, y_image = self.get_image_size(image)
-        factor = self._calculate_scaling_factor(x_image, y_image, geometry, options)
 
-        if not crop or crop == 'noop' or (not upscale and factor >= 1):
+        if not crop or crop == 'noop':
             return image
         elif crop == 'smart':
             # Smart cropping is suitably different from regular cropping
@@ -133,7 +138,7 @@ class EngineBase(object):
         """
         format_ = options['format']
         quality = options['quality']
-        image_info = options['image_info']
+        image_info = options.get('image_info', {})
         # additional non-default-value options:
         progressive = options.get('progressive', settings.THUMBNAIL_PROGRESSIVE)
         raw_data = self._get_raw_data(
@@ -175,19 +180,19 @@ class EngineBase(object):
         """
         Returns the backend image objects from an ImageFile instance
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def get_image_size(self, image):
         """
         Returns the image width and height as a tuple
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def is_valid_image(self, raw_data):
         """
         Checks if the supplied raw data is valid image data
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def _orientation(self, image):
         """
@@ -203,37 +208,51 @@ class EngineBase(object):
 
             RGB, GRAY
         """
-        raise NotImplemented()
-        
+        raise NotImplementedError()
+
     def _remove_border(self, image, image_width, image_height):
         """
         Remove borders around images
         """
-        raise NotImplemented()
-            
+        raise NotImplementedError()
+
     def _entropy_crop(self, image, geometry_width, geometry_height, image_width, image_height):
         """
         Crop the image to the correct aspect ratio
         by removing the lowest entropy parts
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def _scale(self, image, width, height):
         """
         Does the resizing of the image
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def _crop(self, image, width, height, x_offset, y_offset):
         """
         Crops the image
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def _get_raw_data(self, image, format_, quality, image_info=None, progressive=False):
         """
         Gets raw data given the image, format and quality. This method is
         called from :meth:`write`
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
+    def _padding(self, image, geometry, options):
+        """
+        Pads the image
+        """
+        raise NotImplementedError()
+
+    def _cropbox(self, image, x, y, x2, y2):
+        raise NotImplementedError()
+
+    def _rounded(self, image, r):
+        raise NotImplementedError()
+
+    def _blur(self, image, radius):
+        raise NotImplementedError()

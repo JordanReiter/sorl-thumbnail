@@ -1,6 +1,7 @@
 '''
 Wand (>=v0.3.0) engine for Sorl-thumbnail
 '''
+from __future__ import unicode_literals
 
 from wand.image import Image
 from wand import exceptions
@@ -47,11 +48,20 @@ class Engine(EngineBase):
         image.orientation = 'top_left'
         return image
 
+    def _flip_dimensions(self, image):
+        return image.orientation in ['left_top', 'right_top', 'right_bottom', 'left_bottom']
+
     def _colorspace(self, image, colorspace):
         if colorspace == 'RGB':
-            image.type = 'truecolor'
+            if image.alpha_channel:
+                image.type = 'truecolormatte'
+            else:
+                image.type = 'truecolor'
         elif colorspace == 'GRAY':
-            image.type = 'grayscale'
+            if image.alpha_channel:
+                image.type = 'grayscalematte'
+            else:
+                image.type = 'grayscale'
         else:
             return image
         return image

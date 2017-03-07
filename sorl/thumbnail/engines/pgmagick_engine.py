@@ -1,4 +1,6 @@
-from pgmagick import Blob, ColorspaceType, Geometry, Image, ImageType
+from __future__ import unicode_literals
+
+from pgmagick import Blob, Geometry, Image, ImageType
 from pgmagick import InterlaceType, OrientationType
 from sorl.thumbnail.engines.base import EngineBase
 
@@ -53,6 +55,14 @@ class Engine(EngineBase):
         image.orientation(OrientationType.TopLeftOrientation)
 
         return image
+
+    def flip_dimensions(self, image):
+        return image.orientation() in [
+            OrientationType.LeftTopOrientation,
+            OrientationType.RightTopOrientation,
+            OrientationType.RightBottomOrientation,
+            OrientationType.LeftBottomOrientation,
+        ]
 
     def _colorspace(self, image, colorspace):
         if colorspace == 'RGB':

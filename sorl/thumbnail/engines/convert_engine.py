@@ -1,17 +1,16 @@
-from __future__ import with_statement
+from __future__ import unicode_literals, with_statement
 import re
-
 import os
-
 import subprocess
+from collections import OrderedDict
 
-from django.utils.datastructures import SortedDict
 from django.utils.encoding import smart_str
+from django.core.files.temp import NamedTemporaryFile
+
 from sorl.thumbnail.base import EXTENSIONS
+from sorl.thumbnail.compat import b
 from sorl.thumbnail.conf import settings
 from sorl.thumbnail.engines.base import EngineBase
-
-from tempfile import NamedTemporaryFile
 
 
 size_re = re.compile(r'^(?:.+) (?:[A-Z]+) (?P<x>\d+)x(?P<y>\d+)')
@@ -26,8 +25,10 @@ class Engine(EngineBase):
         """
         Writes the thumbnail image
         """
-        if (options['format'] == 'JPEG' and options.get('progressive', settings.THUMBNAIL_PROGRESSIVE)):
+        if options['format'] == 'JPEG' and options.get(
+                'progressive', settings.THUMBNAIL_PROGRESSIVE):
             image['options']['interlace'] = 'line'
+
         image['options']['quality'] = options['quality']
 
         args = settings.THUMBNAIL_CONVERT.split(' ')
@@ -69,7 +70,7 @@ class Engine(EngineBase):
         """
         with NamedTemporaryFile(mode='wb', delete=False) as fp:
             fp.write(source.read())
-        return {'source': fp.name, 'options': SortedDict(), 'size': None}
+        return {'source': fp.name, 'options': OrderedDict(), 'size': None}
 
     def get_image_size(self, image):
         """
@@ -99,7 +100,7 @@ class Engine(EngineBase):
         return retcode == 0
 
     def _orientation(self, image):
-        #return image
+        # return image
         # XXX need to get the dimensions right after a transpose.
 
         if settings.THUMBNAIL_CONVERT.endswith('gm convert'):
@@ -108,7 +109,7 @@ class Engine(EngineBase):
             p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             p.wait()
             result = p.stdout.read().strip()
-            if result and result != 'unknown':
+            if result and result != b('unknown'):
                 result = int(result)
                 options = image['options']
                 if result == 2:
@@ -133,6 +134,17 @@ class Engine(EngineBase):
             image['options']['auto-orient'] = None
         return image
 
+    def _flip_dimensions(self, image):
+        if settings.THUMBNAIL_CONVERT.endswith('gm convert'):
+            args = settings.THUMBNAIL_IDENTIFY.split()
+            args.extend(['-format', '%[exif:orientation]', image['source']])
+            p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p.wait()
+            result = p.stdout.read().strip()
+            return result != 'unknown' and int(result) in [5, 6, 7, 8]
+        else:
+            return False
+
     def _colorspace(self, image, colorspace):
         """
         `Valid colorspaces
@@ -148,9 +160,7 @@ class Engine(EngineBase):
         """
         Crops the image
         """
-        image['options']['crop'] = '%sx%s+%s+%s' % (
-            width, height, x_offset, y_offset
-        )
+        image['options']['crop'] = '%sx%s+%s+%s' % (width, height, x_offset, y_offset)
         image['size'] = (width, height)  # update image size
         return image
 
@@ -160,4 +170,14 @@ class Engine(EngineBase):
         """
         image['options']['scale'] = '%sx%s!' % (width, height)
         image['size'] = (width, height)  # update image size
+        return image
+
+    def _padding(self, image, geometry, options):
+        """
+        Pads the image
+        """
+        # The order is important. The gravity option should come before extent.
+        image['options']['background'] = options.get('padding_color')
+        image['options']['gravity'] = 'center'
+        image['options']['extent'] = '%sx%s' % (geometry[0], geometry[1])
         return image

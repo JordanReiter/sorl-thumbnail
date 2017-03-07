@@ -1,10 +1,13 @@
-import math
+from __future__ import unicode_literals
+
 import hashlib
+import json
+import math
+from importlib import import_module
 
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.encoding import smart_text
-from django.utils.importlib import import_module
-from sorl.thumbnail.compat import json, encode
+from django.utils.encoding import force_text
+from sorl.thumbnail.compat import encode
 
 
 class ThumbnailError(Exception):
@@ -29,6 +32,9 @@ def toint(number):
         if number > 1:
             number = round(number, 0)
         else:
+            # The following solves when image has small dimensions (like 1x54)
+            # then scale factor 1 * 0.296296 and `number` will store `0`
+            # that will later raise ZeroDivisionError.
             number = round(math.ceil(number), 0)
     return int(number)
 
@@ -37,7 +43,7 @@ def tokey(*args):
     """
     Computes a unique key from arguments given.
     """
-    salt = '||'.join([smart_text(arg) for arg in args])
+    salt = '||'.join([force_text(arg) for arg in args])
     hash_ = hashlib.md5(encode(salt))
     return hash_.hexdigest()
 

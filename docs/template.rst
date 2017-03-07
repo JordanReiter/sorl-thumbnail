@@ -42,6 +42,8 @@ Source can be an ImageField, FileField, a file name (assuming default_storage),
 a url. What we need to know is name and storage, see how ImageFile figures
 these things out::
 
+    from django.utils.encoding import force_text
+
     class ImageFile(BaseImageFile):
         _size = None
 
@@ -52,7 +54,7 @@ these things out::
             if hasattr(file_, 'name'):
                 self.name = file_.name
             else:
-                self.name = force_unicode(file_)
+                self.name = force_text(file_)
             # figure out storage
             if storage is not None:
                 self.storage = storage
@@ -110,7 +112,7 @@ above text. After it is rescaled it will apply the cropping options. There are
 some differences to the `css background-position`_:
 
 - Only % and px are valid lengths (units)
-- ``noop`` (No Operation) is a valid option which means there is no 
+- ``noop`` (No Operation) is a valid option which means there is no
   cropping after the initial rescaling to minimum of width and height.
 
 There are many overlapping options here for example ``center`` is equivalent to
@@ -175,7 +177,7 @@ Images are not padded by default, but this can be changed by setting
 ``padding_color``
 ^^^^^^^^^^^^^^^^^
 This is the color to use for padding the image. It defaults to ``#ffffff`` and
-can be globally set with the setting ``THUBMNAIL_PADDING_COLOR``.
+can be globally set with the setting ``THUMBNAIL_PADDING_COLOR``.
 
 
 ``options``

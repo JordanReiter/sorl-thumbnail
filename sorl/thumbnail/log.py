@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import logging
 
 from django.core.mail.message import EmailMessage
+
 from sorl.thumbnail.conf import settings
 
 
@@ -36,4 +37,3 @@ class ThumbnailLogHandler(logging.Handler):
             connection=None
         )
         msg.send(fail_silently=True)
-
